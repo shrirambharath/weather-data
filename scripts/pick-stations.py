@@ -3,7 +3,17 @@ import os.path
 
 from os import path
 
-CORE_TRACKING_ELEMENTS = set(['AWND','PRCP','SNOW','SNWD','TAVG','TMAX','TMIN','WT01','WT03','WT04','WT06','WT08','WT11'])
+CORE_TRACKING_ELEMENTS = {
+	'AWND': { 'agg_type': 'average', 'interval': 7 },
+	'PRCP': { 'agg_type': 'sum', 'interval': 90 },
+	'SNOW': { 'agg_type': 'sum', 'interval': 90 },
+	'SNWD': { 'agg_type': 'sum', 'interval': 90 },
+	'TAVG': { 'agg_type': 'average', 'interval': 7 },
+	'TMAX': { 'agg_type': 'average', 'interval': 7 },
+	'TMIN': { 'agg_type': 'average', 'interval': 7 },
+	'WT08': { 'agg_type': 'or_op', 'interval': 7 },
+	'WT11': { 'agg_type': 'or_op', 'interval': 7 }
+}
 
 def get_selected_stations_filename(data_dir, append_date):	
 	_selected_stations_file = '%s/ghcnd-selected-stations.txt' % (data_dir)
@@ -23,10 +33,10 @@ def filter_stations(station_details):
 	for _station in sorted(station_details.keys()):
 		(_lat, _lon, element_set, _start_year, _end_year, _name) = station_details[_station]
 		# select stations that track one or more of teh core tracking elements. Discard other stations and elements
-		if len(element_set & CORE_TRACKING_ELEMENTS) == 0:
+		if len(element_set & CORE_TRACKING_ELEMENTS.keys()) == 0:
 			continue
 
-		_m = { 'lat': _lat, 'lon': _lon, 'station': _station, 'elements': [x for x in sorted(element_set & CORE_TRACKING_ELEMENTS)], \
+		_m = { 'lat': _lat, 'lon': _lon, 'station': _station, 'elements': [x for x in sorted(element_set & CORE_TRACKING_ELEMENTS.keys())], \
 			'start': _start_year, 'latest': _end_year, 'name': _name}
 		selected_station_details[_station] = _m
 
@@ -71,7 +81,7 @@ def pick_stations(data_dir, start_year):
 	_selected_station_details= filter_stations(_station_details)	
 
 	result_map = { 'selected_stations': _selected_station_details, 
-					'selected_elements': sorted([x for x in CORE_TRACKING_ELEMENTS])
+					'selected_elements': CORE_TRACKING_ELEMENTS,
 				 }
 	_selected_stations_filename = get_selected_stations_filename(data_dir, _append_date)
 	with open(_selected_stations_filename, 'w') as _selected_stations_handle:
